@@ -14,7 +14,6 @@ const [previewStream, setPreviewStream] = useState(null);
         if (!roomID) {
             alert("Lütfen toplantı kodunu giriniz.");
             return;
-
         }
         if (!username) {
             alert("Lütfen kullanıcı adını giriniz.");
@@ -28,7 +27,10 @@ if (!username||!roomID) {
             alert("Lütfen tüm alanları doldurunuz.");
             return;
         }
-
+if (roomID.length !== 36) {
+            alert("Hatalı toplantı kodu.");
+            return;
+        }
         navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
 
   };

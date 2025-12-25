@@ -27,14 +27,12 @@ export default function Room() {
       localStreamRef.current.getTracks().forEach(track => pc.addTrack(track, localStreamRef.current));
     }
 
-    // ICE Candidate
     pc.onicecandidate = (e) => {
       if (e.candidate) {
         socketRef.current.emit("webrtc-ice", { to: otherUserId, candidate: e.candidate });
       }
     };
 
-    // Remote track geldiğinde state'i güncelle
     pc.ontrack = (e) => {
       setRemoteStreams(prev => ({
         ...prev,
@@ -51,7 +49,7 @@ export default function Room() {
 
     const startApp = async () => {
       try {
-        // ÖNCE kamerayı alıyoruz
+        // ÖNCE kamera
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localStreamRef.current = stream;
         
@@ -116,11 +114,11 @@ export default function Room() {
 
   return (
     <div>
-      <h2>Oda ID<br /><br />{roomId}</h2>
+      <h2>TOPLANTI KODU<br /><br />{roomId}</h2>
 
       <h2>Odadaki Kişiler</h2>
       <ul style={{ textTransform: "capitalize" }}>
-        <li key={mysocketId}>{username} (Sen)</li>
+        <li key={mysocketId}>{username} (Siz)</li>
         {users.map(user => <li key={user.socketId}>{user.username}</li>)}
       </ul>
 
