@@ -114,7 +114,32 @@ export default function Room() {
 
   return (
     <div>
-      <h2>TOPLANTI KODU<br /><br />{roomId}</h2>
+      <h2>
+        TOPLANTI KODU<br /><br />
+        {roomId}
+        <button 
+        onMouseOver={(e) => {
+            e.target.style.background = "#e0e0e0";
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = "#f5f5f5";
+          }}
+          style={{
+            marginLeft: "10px",
+            padding: "4px 10px",
+            fontSize: "0.6em",
+            cursor: "pointer",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+            background: "#f5f5f5"
+          }}
+          onClick={() => {
+            navigator.clipboard.writeText(roomId);
+          }}
+        >
+          Kopyala
+        </button>
+      </h2>
 
       <h2>Odadaki Kişiler</h2>
       <ul style={{ textTransform: "capitalize" }}>
