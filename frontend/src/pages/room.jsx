@@ -1,3 +1,4 @@
+// Room.jsx
 import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
@@ -15,8 +16,8 @@ export default function Room() {
   const [searchParams] = useSearchParams();
   const username = searchParams.get("username");
 
+  const [remoteStreams, setRemoteStreams] = useState({}); 
 
-  
   // PeerConnection oluşturma
   const createPeerConnection = (otherUserId) => {
     const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
@@ -26,69 +27,63 @@ export default function Room() {
       localStreamRef.current.getTracks().forEach(track => pc.addTrack(track, localStreamRef.current));
     }
 
+    // ICE Candidate
     pc.onicecandidate = (e) => {
       if (e.candidate) {
         socketRef.current.emit("webrtc-ice", { to: otherUserId, candidate: e.candidate });
       }
     };
 
+    // Remote track geldiğinde state'i güncelle
     pc.ontrack = (e) => {
-      const remoteVideo = document.getElementById(`remote-video-${otherUserId}`);
-      if (remoteVideo) {
-        remoteVideo.srcObject = e.streams[0];
-      }
+      setRemoteStreams(prev => ({
+        ...prev,
+        [otherUserId]: e.streams[0]
+      }));
     };
 
     pcsRef.current[otherUserId] = pc;
     return pc;
   };
 
-  useEffect(() => {
+ useEffect(() => {
     socketRef.current = io("http://localhost:5006");
 
-    // Kamera + mikrofon
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
+    const startApp = async () => {
+      try {
+        // ÖNCE kamerayı alıyoruz
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         localStreamRef.current = stream;
-        const localVideo = document.getElementById("local-video");
-        if (localVideo) localVideo.srcObject = stream;
-      });
+        
+        // SONRA odaya katılıyoruz
+        socketRef.current.emit("join-room", { roomId, username });
+      } catch (err) {
+        console.error("Kamera hatası:", err);
+      }
+    };
 
-    // Socket bağlantısı
-    socketRef.current.on("connect", () => setMySocketId(socketRef.current.id));
+    startApp();
 
-    socketRef.current.emit("join-room", { roomId, username });
+    socketRef.current.on("room-users", async (users) => {
+      const otherUsers = users.filter(u => u.socketId !== socketRef.current.id);
+      setUsers(otherUsers);
 
-   socketRef.current.on("room-users", async (users) => {
-  const otherUsers = users.filter(
-    u => u.socketId !== socketRef.current.id
-  );
+      for (const user of otherUsers) {
+        if (pcsRef.current[user.socketId]) continue;
 
-  setUsers(otherUsers);
-
-  // Eğer odada 1 kişi varsa → OFFER GÖNDER
-  if (otherUsers.length === 1) {
-    const otherUser = otherUsers[0];
-
-    // Aynı kişiye tekrar offer gönderme
-    if (pcsRef.current[otherUser.socketId]) return;
-
-    const pc = createPeerConnection(otherUser.socketId);
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-
-    socketRef.current.emit("webrtc-offer", {
-      to: otherUser.socketId,
-      offer
+        const pc = createPeerConnection(user.socketId);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socketRef.current.emit("webrtc-offer", { to: user.socketId, offer });
+      }
     });
-  }
-});
 
-
-    // WebRTC offer
     socketRef.current.on("webrtc-offer", async ({ from, offer }) => {
       const pc = createPeerConnection(from);
-      await pc.setRemoteDescription(offer);
+      // Signaling state kontrolü
+      if (pc.signalingState !== "stable") return; 
+      
+      await pc.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       socketRef.current.emit("webrtc-answer", { to: from, answer });
@@ -96,22 +91,32 @@ export default function Room() {
 
     socketRef.current.on("webrtc-answer", async ({ from, answer }) => {
       const pc = pcsRef.current[from];
-      if (pc) await pc.setRemoteDescription(answer);
+      // Sadece 'have-local-offer' durumundaysa answer kabul edilir
+      if (pc && pc.signalingState === "have-local-offer") {
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      }
     });
 
-  socketRef.current.on("webrtc-ice", async ({ from, candidate }) => {
-  const pc = pcsRef.current[from];
-  if (pc && candidate) {
-    await pc.addIceCandidate(new RTCIceCandidate(candidate));
-  }
-});
+    socketRef.current.on("webrtc-ice", async ({ from, candidate }) => {
+      const pc = pcsRef.current[from];
+      // Remote description set edilmeden ice candidate eklenemez!
+      if (pc && pc.remoteDescription) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    });
 
-    return () => socketRef.current.disconnect();
+    return () => {
+      socketRef.current.disconnect();
+      // Temizlik: Trackleri durdur
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
   }, [roomId, username]);
 
   return (
     <div>
-      <h2>Oda ID<br /> <br /> {roomId}</h2>
+      <h2>Oda ID<br /><br />{roomId}</h2>
 
       <h2>Odadaki Kişiler</h2>
       <ul style={{ textTransform: "capitalize" }}>
@@ -122,21 +127,20 @@ export default function Room() {
       <h1 style={{ textAlign: "center", marginTop: "-70px" }}>TOPLANTI SALONU</h1>
 
       <div style={{ display: "flex", justifyContent: "center", gap: "30px" }}>
-        <FaceCamCard title={username} isLocal={true} videoId="local-video" />
+        <FaceCamCard title={username} isLocal={true} videoStream={localStreamRef.current} />
         {users.map(user => (
           <FaceCamCard
             key={user.socketId}
             title={user.username}
             isLocal={false}
-            videoId={`remote-video-${user.socketId}`}
+            videoStream={remoteStreams[user.socketId]}
           />
         ))}
       </div>
+
       <div style={{ display: "flex", justifyContent: "center", marginTop: "50px" }}>
         <button 
-          onClick={() => {
-            window.location.href = '/';
-          }}
+          onClick={() => window.location.href = '/'}
           style={{
             backgroundColor: "red",
             color: "white",
