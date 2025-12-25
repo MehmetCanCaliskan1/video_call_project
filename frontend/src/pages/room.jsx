@@ -57,9 +57,31 @@ export default function Room() {
 
     socketRef.current.emit("join-room", { roomId, username });
 
-    socketRef.current.on("room-users", (users) => {
-      setUsers(users.filter(u => u.socketId !== socketRef.current.id));
+   socketRef.current.on("room-users", async (users) => {
+  const otherUsers = users.filter(
+    u => u.socketId !== socketRef.current.id
+  );
+
+  setUsers(otherUsers);
+
+  // Eğer odada 1 kişi varsa → OFFER GÖNDER
+  if (otherUsers.length === 1) {
+    const otherUser = otherUsers[0];
+
+    // Aynı kişiye tekrar offer gönderme
+    if (pcsRef.current[otherUser.socketId]) return;
+
+    const pc = createPeerConnection(otherUser.socketId);
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    socketRef.current.emit("webrtc-offer", {
+      to: otherUser.socketId,
+      offer
     });
+  }
+});
+
 
     // WebRTC offer
     socketRef.current.on("webrtc-offer", async ({ from, offer }) => {
@@ -75,10 +97,12 @@ export default function Room() {
       if (pc) await pc.setRemoteDescription(answer);
     });
 
-    socketRef.current.on("webrtc-ice", ({ from, candidate }) => {
-      const pc = pcsRef.current[from];
-      if (pc) pc.addIceCandidate(candidate);
-    });
+  socketRef.current.on("webrtc-ice", async ({ from, candidate }) => {
+  const pc = pcsRef.current[from];
+  if (pc && candidate) {
+    await pc.addIceCandidate(new RTCIceCandidate(candidate));
+  }
+});
 
     return () => socketRef.current.disconnect();
   }, [roomId, username]);
@@ -93,9 +117,9 @@ export default function Room() {
         {users.map(user => <li key={user.socketId}>{user.username}</li>)}
       </ul>
 
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>TOPLANTI ORTAMI</h1>
+      <h1 style={{ textAlign: "center", marginTop: "-70px" }}>TOPLANTI ORTAMI</h1>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "center", gap: "30px" }}>
         <FaceCamCard title={username} isLocal={true} videoId="local-video" />
         {users.map(user => (
           <FaceCamCard
@@ -105,6 +129,21 @@ export default function Room() {
             videoId={`remote-video-${user.socketId}`}
           />
         ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", marginTop: "50px" }}>
+        <button 
+          onClick={() => {
+            window.location.href = '/';
+          }}
+          style={{
+            backgroundColor: "red",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "5px"
+          }}
+        >
+          TOPLANTIDAN AYRIL
+        </button>
       </div>
     </div>
   );

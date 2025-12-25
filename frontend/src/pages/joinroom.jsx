@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 function Joinroom() {
     const navigate = useNavigate(); 
 
-    const redirectToRoom = (e) => {
+    const redirectToRoom = async(e) => {
         e.preventDefault();
        
         const roomID = e.target.roomID.value;
@@ -27,9 +27,9 @@ if (!username||!roomID) {
             return;
         }
 
-        
-        navigate(`/room/${roomID}?username=${username}`);
-    };
+        navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
+
+  };
 
     return (
         <div>

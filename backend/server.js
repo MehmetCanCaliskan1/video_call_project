@@ -15,22 +15,26 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
-
-app.get("/room-exists/:roomId", (req, res) => {
+/* app.get("/room-exists/:roomId", (req, res) => {
   const { roomId } = req.params;
   res.json({ exists: !!rooms[roomId] });
-});
+}); */
 
 io.on("connection", (socket) => {
   console.log("Bağlandı:", socket.id);
 
  socket.on("join-room", ({ roomId, username }) => {
 
-  //ODA YOK
   if (!rooms[roomId]) {
-    socket.emit("room-not-found");
-    return;
-      }
+
+    rooms[roomId] = [];}
+/*   const users = rooms[roomId];
+  users.push({
+    socketId: socket.id,
+    username
+  });
+  socket.join(roomId);
+ */
 
   // ODA DOLU
   if (rooms[roomId].length >= 2) {
@@ -39,15 +43,14 @@ io.on("connection", (socket) => {
   }
 
   socket.join(roomId);
-
   rooms[roomId].push({
     socketId: socket.id,
     username
   });
 
-    console.log(`${username} odaya girdi: ${roomId}`);
-    io.to(roomId).emit("room-users", rooms[roomId]);
-  });
+  console.log(`${username} odaya girdi: ${roomId}`);
+  io.to(roomId).emit("room-users", rooms[roomId]);
+});
 
   socket.on("disconnect", () => {
   for (const roomId in rooms) {

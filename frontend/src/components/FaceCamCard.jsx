@@ -34,7 +34,8 @@ function FaceCamCard({ title, isLocal }) {
         border: "1px solid #ddd",
         borderRadius: "10px",
         padding: "10px",
-        width: "250px",
+        width: "350px",
+        height: "auto",
         boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
         fontFamily: "Arial, sans-serif",
       }}
