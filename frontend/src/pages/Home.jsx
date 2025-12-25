@@ -12,7 +12,7 @@ function Home() {
     if (!username) {
       alert("Kullanıcı adı gereklidir.")
       return
-    }
+    }   
     navigate(`/room/${roomId}?username=${username}`)
   }
 

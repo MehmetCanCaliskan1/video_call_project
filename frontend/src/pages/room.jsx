@@ -15,6 +15,8 @@ export default function Room() {
   const [searchParams] = useSearchParams();
   const username = searchParams.get("username");
 
+
+  
   // PeerConnection oluşturma
   const createPeerConnection = (otherUserId) => {
     const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
@@ -112,12 +114,12 @@ export default function Room() {
       <h2>Oda ID<br /> <br /> {roomId}</h2>
 
       <h2>Odadaki Kişiler</h2>
-      <ul>
+      <ul style={{ textTransform: "capitalize" }}>
         <li key={mysocketId}>{username} (Sen)</li>
         {users.map(user => <li key={user.socketId}>{user.username}</li>)}
       </ul>
 
-      <h1 style={{ textAlign: "center", marginTop: "-70px" }}>TOPLANTI ORTAMI</h1>
+      <h1 style={{ textAlign: "center", marginTop: "-70px" }}>TOPLANTI SALONU</h1>
 
       <div style={{ display: "flex", justifyContent: "center", gap: "30px" }}>
         <FaceCamCard title={username} isLocal={true} videoId="local-video" />

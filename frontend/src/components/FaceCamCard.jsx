@@ -38,9 +38,10 @@ function FaceCamCard({ title, isLocal }) {
         height: "auto",
         boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
         fontFamily: "Arial, sans-serif",
+        fontSize: "20px",
       }}
     >
-      <h3 style={{ marginBottom: "20px" }}>{title}</h3>
+      <h3 style={{ marginBottom: "20px", textTransform: "capitalize" }}>{title}</h3>
       <video
         ref={videoRef}
         autoPlay
@@ -68,3 +69,5 @@ function FaceCamCard({ title, isLocal }) {
 }
 
 export default FaceCamCard;
+
+

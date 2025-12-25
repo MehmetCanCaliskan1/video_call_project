@@ -1,15 +1,17 @@
 import FaceCamCard from "../components/FaceCamCard.jsx";
 import { useNavigate } from "react-router-dom";
-
+import { useRef,useEffect,setPreviewStream,useState } from "react";
 function Joinroom() {
-    const navigate = useNavigate(); 
+    const localStreamRef = useRef(null);
+    const navigate = useNavigate();
+const [previewStream, setPreviewStream] = useState(null);
 
     const redirectToRoom = async(e) => {
         e.preventDefault();
        
         const roomID = e.target.roomID.value;
         const username = e.target.username.value;
-if (!roomID ) {
+        if (!roomID) {
             alert("Lütfen toplantı kodunu giriniz.");
             return;
 
@@ -30,7 +32,13 @@ if (!username||!roomID) {
         navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
 
   };
-
+useEffect(() => {
+  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    .then(stream => {
+      localStreamRef.current = stream;
+      setPreviewStream(stream);
+    });
+}, []);
     return (
         <div>
             <h1 style={{ textAlign: "center" }}>Toplantıya Katılın</h1>
@@ -65,6 +73,7 @@ if (!username||!roomID) {
                 <FaceCamCard 
                 title="Kamera Önizleme"
                 isLocal={true}
+  stream={previewStream}
                 />
             </div>
         </div>
