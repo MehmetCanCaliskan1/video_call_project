@@ -11,9 +11,9 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
-  }
+    origin: "*", 
+    methods: ["GET", "POST"],
+  },
 });
 /* app.get("/room-exists/:roomId", (req, res) => {
   const { roomId } = req.params;
@@ -98,6 +98,5 @@ socket.on("webrtc-ice", ({ to, candidate }) => {
 });
 
 
-server.listen(5006, () => {
-  console.log("Backend çalışıyor → http://localhost:5006");
-});
+const PORT = process.env.PORT || 5006;
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
