@@ -53,8 +53,7 @@ export default function Room() {
   };
 //useeffect
   useEffect(() => {
-    socketRef.current = io("http://localhost:5006");
-
+    socketRef.current = io(import.meta.env.VITE_BACKEND_URL || "http://localhost:5006");
     socketRef.current.on("connect", () => {
       setMySocketId(socketRef.current.id);
     });
