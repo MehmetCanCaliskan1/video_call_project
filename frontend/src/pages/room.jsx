@@ -1,4 +1,3 @@
-// Room.jsx
 import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
@@ -6,30 +5,39 @@ import FaceCamCard from "../components/FaceCamCard.jsx";
 
 export default function Room() {
   const [users, setUsers] = useState([]);
-  const [mysocketId, setMySocketId] = useState(null);
+  const [remoteStreams, setRemoteStreams] = useState({});
 
   const socketRef = useRef(null);
-  const pcsRef = useRef({}); // Her kullanıcı için ayrı PeerConnection
+  const pcsRef = useRef({});
   const localStreamRef = useRef(null);
+  const iceQueueRef = useRef({});
 
   const { roomId } = useParams();
   const [searchParams] = useSearchParams();
   const username = searchParams.get("username");
 
-  const [remoteStreams, setRemoteStreams] = useState({}); 
-
-  // PeerConnection oluşturma
+  // PeerConnection oluşturma kısmı
   const createPeerConnection = (otherUserId) => {
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+    if (pcsRef.current[otherUserId]) {
+      return pcsRef.current[otherUserId];
+    }
 
-    // Local trackleri ekle
+    const pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    });
+
     if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => pc.addTrack(track, localStreamRef.current));
+      localStreamRef.current.getTracks().forEach(track =>
+        pc.addTrack(track, localStreamRef.current)
+      );
     }
 
     pc.onicecandidate = (e) => {
       if (e.candidate) {
-        socketRef.current.emit("webrtc-ice", { to: otherUserId, candidate: e.candidate });
+        socketRef.current.emit("webrtc-ice", {
+          to: otherUserId,
+          candidate: e.candidate
+        });
       }
     };
 
@@ -43,17 +51,22 @@ export default function Room() {
     pcsRef.current[otherUserId] = pc;
     return pc;
   };
-
- useEffect(() => {
+//useeffect
+  useEffect(() => {
     socketRef.current = io("http://localhost:5006");
+
+    socketRef.current.on("connect", () => {
+      setMySocketId(socketRef.current.id);
+    });
 
     const startApp = async () => {
       try {
-        // ÖNCE kamera
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true
+        });
         localStreamRef.current = stream;
-        
-        // SONRA odaya katılıyoruz
+
         socketRef.current.emit("join-room", { roomId, username });
       } catch (err) {
         console.error("Kamera hatası:", err);
@@ -62,50 +75,82 @@ export default function Room() {
 
     startApp();
 
-    socketRef.current.on("room-users", async (users) => {
-      const otherUsers = users.filter(u => u.socketId !== socketRef.current.id);
-      setUsers(otherUsers);
+    // Oda kullanıcıları
+socketRef.current.on("room-users", async (roomUsers) => {
+  const others = roomUsers.filter(u => u.socketId !== socketRef.current.id);
+  setUsers(others);
 
-      for (const user of otherUsers) {
-        if (pcsRef.current[user.socketId]) continue;
+  if (others.length !== 1) return;
 
-        const pc = createPeerConnection(user.socketId);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        socketRef.current.emit("webrtc-offer", { to: user.socketId, offer });
-      }
-    });
+  const other = others[0];
 
+  //OFFERI SADECE socketId si büyük olan yapsın
+  if (socketRef.current.id < other.socketId) return;
+
+  if (pcsRef.current[other.socketId]) return;
+
+  const pc = createPeerConnection(other.socketId);
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  socketRef.current.emit("webrtc-offer", {
+    to: other.socketId,
+    offer
+  });
+});
+
+    // OFFER kısmı
     socketRef.current.on("webrtc-offer", async ({ from, offer }) => {
       const pc = createPeerConnection(from);
-      // Signaling state kontrolü
-      if (pc.signalingState !== "stable") return; 
-      
+
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+
       socketRef.current.emit("webrtc-answer", { to: from, answer });
     });
 
-    socketRef.current.on("webrtc-answer", async ({ from, answer }) => {
-      const pc = pcsRef.current[from];
-      // Sadece 'have-local-offer' durumundaysa answer kabul edilir
-      if (pc && pc.signalingState === "have-local-offer") {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      }
-    });
+    // ANSWER kısmı
+  socketRef.current.on("webrtc-answer", async ({ from, answer }) => {
+  const pc = pcsRef.current[from];
+  if (!pc) return;
 
+  if (pc.signalingState !== "have-local-offer") {
+    console.warn("Answer ignored, wrong state:", pc.signalingState);
+    return;
+  }
+
+  await pc.setRemoteDescription(new RTCSessionDescription(answer));
+
+  // ICE kuyruğununun boşaltılması kısmı
+  iceQueueRef.current[from]?.forEach(async c => {
+    await pc.addIceCandidate(new RTCIceCandidate(c));
+  });
+  iceQueueRef.current[from] = [];
+});
+    // ICE
     socketRef.current.on("webrtc-ice", async ({ from, candidate }) => {
       const pc = pcsRef.current[from];
-      // Remote description set edilmeden ice candidate eklenemez!
-      if (pc && pc.remoteDescription) {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      if (!pc) return;
+
+      if (!pc.remoteDescription) {
+        if (!iceQueueRef.current[from]) {
+          iceQueueRef.current[from] = [];
+        }
+        iceQueueRef.current[from].push(candidate);
+        return;
       }
+
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
     });
 
     return () => {
+      socketRef.current.off();
       socketRef.current.disconnect();
-      // Temizlik: Trackleri durdur
+
+      Object.values(pcsRef.current).forEach(pc => pc.close());
+      pcsRef.current = {};
+
       if (localStreamRef.current) {
         localStreamRef.current.getTracks().forEach(track => track.stop());
       }
@@ -117,25 +162,9 @@ export default function Room() {
       <h2>
         TOPLANTI KODU<br /><br />
         {roomId}
-        <button 
-        onMouseOver={(e) => {
-            e.target.style.background = "#e0e0e0";
-          }}
-          onMouseOut={(e) => {
-            e.target.style.background = "#f5f5f5";
-          }}
-          style={{
-            marginLeft: "10px",
-            padding: "4px 10px",
-            fontSize: "0.6em",
-            cursor: "pointer",
-            borderRadius: "4px",
-            border: "1px solid #ccc",
-            background: "#f5f5f5"
-          }}
-          onClick={() => {
-            navigator.clipboard.writeText(roomId);
-          }}
+        <button
+             style={{ marginLeft: 10 }}
+          onClick={() => navigator.clipboard.writeText(roomId)}
         >
           Kopyala
         </button>
@@ -143,35 +172,36 @@ export default function Room() {
 
       <h2>Odadaki Kişiler</h2>
       <ul style={{ textTransform: "capitalize" }}>
-        <li key={mysocketId}>{username} (Siz)</li>
-        {users.map(user => <li key={user.socketId}>{user.username}</li>)}
+        <li>{username} (Siz)</li>
+        {users.map(u => (
+          <li >{u.username}</li>
+        ))}
       </ul>
 
-      <h1 style={{ textAlign: "center", marginTop: "-70px" }}>TOPLANTI SALONU</h1>
+      <h1 style={{ textAlign: "center" }}>TOPLANTI SALONU</h1>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: "30px" }}>
-        <FaceCamCard title={username} isLocal={true} videoStream={localStreamRef.current} />
-        {users.map(user => (
+      <div style={{ display: "flex", justifyContent: "center", gap: 30 }}>
+        <FaceCamCard
+          title={username}
+          isLocal
+          videoStream={localStreamRef.current}
+        />
+        {users.map(u => (
           <FaceCamCard
-            key={user.socketId}
-            title={user.username}
+            key={u.socketId}
+            title={u.username}
             isLocal={false}
-            videoStream={remoteStreams[user.socketId]}
+            videoStream={remoteStreams[u.socketId]}
           />
         ))}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", marginTop: "50px" }}>
-        <button 
-          onClick={() => window.location.href = '/'}
-          style={{
-            backgroundColor: "red",
-            color: "white",
-            padding: "10px 20px",
-            borderRadius: "5px"
-          }}
-        >
-          TOPLANTIDAN AYRIL
+      <div style={{ textAlign: "center", marginTop: 40 }}>
+        <button
+          onClick={() => (window.location.href = "/")}
+          style={{ background: "red", 
+            color: "white", padding: "10px 20px" }}
+        >TOPLANTIDAN AYRIL
         </button>
       </div>
     </div>
