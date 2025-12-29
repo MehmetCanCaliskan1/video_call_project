@@ -71,6 +71,19 @@ function Joinroom() {
                     flex: 1,
                 }}
             >
+                <div
+                    style={{
+                        width: "100%",
+                        maxWidth: "420px",
+                    }}
+                >
+                    <FaceCamCard
+                        title="Kamera Önizleme"
+                        isLocal={true}
+                        stream={previewStream}
+                    />
+                </div>
+
                 <form
                     onSubmit={redirectToRoom}
                     style={{
@@ -82,7 +95,7 @@ function Joinroom() {
                         flexDirection: "column",
                         gap: "16px",
                         width: "100%",
-                        maxWidth: "380px",
+                        maxWidth: "420px",
                     }}
                 >
                     <label style={{ fontWeight: 500, color: "#444", fontSize: "14px" }}>
@@ -138,15 +151,19 @@ function Joinroom() {
                         Katıl
                     </button>
                 </form>
-
-                <div style={{ width: "100%", maxWidth: "380px" }}>
-                    <FaceCamCard
-                        title="Kamera Önizleme"
-                        isLocal={true}
-                        stream={previewStream}
-                    />
-                </div>
             </div>
+
+            <style>
+                {`
+                  @media (min-width: 1024px) {
+                    div[style*="flex-direction: column"][style*="gap: 24px"] {
+                      flex-direction: row;
+                      align-items: center;
+                      gap: 48px;
+                    }
+                  }
+                `}
+            </style>
         </div>
     );
 }
