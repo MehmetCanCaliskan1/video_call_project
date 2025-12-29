@@ -47,21 +47,21 @@ useEffect(() => {
      <div className="joinroom-page">
   <h1 className="joinroom-title">Toplantıya Katılın</h1>
 
-  <div className="joinroom-container">
+  <div className="joinroom-wrapper">
     <form onSubmit={redirectToRoom} className="joinroom-form">
-      
-      <label>
+
+      <label className="joinroom-label">
         Toplantı Kodu:
         <input
           type="text"
           name="roomID"
-          className="joinroom-input room"
+          className="joinroom-input joinroom-input-room"
           autoComplete="off"
           required
         />
       </label>
 
-      <label>
+      <label className="joinroom-label">
         Kullanıcı Adı:
         <input
           type="text"

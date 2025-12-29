@@ -1,4 +1,3 @@
-/* Sayfa genel */
 .joinroom-page {
   min-height: 100vh;
   background: #f7f8fa;
@@ -9,8 +8,7 @@
   color: #333;
 }
 
-/* Ana layout */
-.joinroom-container {
+.joinroom-wrapper {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -19,7 +17,6 @@
   gap: 32px;
 }
 
-/* Form */
 .joinroom-form {
   background: #fff;
   padding: 60px 40px;
@@ -32,12 +29,11 @@
   height: 250px;
 }
 
-.joinroom-form label {
+.joinroom-label {
   font-weight: 500;
   color: #444;
 }
 
-/* Inputlar */
 .joinroom-input {
   margin-top: 6px;
   width: 100%;
@@ -46,11 +42,10 @@
   border: 1px solid #ccc;
 }
 
-.joinroom-input.room {
+.joinroom-input-room {
   margin-bottom: 10px;
 }
 
-/* Button */
 .joinroom-button {
   margin-top: 12px;
   border-radius: 6px;
@@ -62,8 +57,4 @@
   cursor: pointer;
   font-size: 16px;
   transition: background 0.2s;
-}
-
-.joinroom-button:hover {
-  background: #125ca1;
 }
