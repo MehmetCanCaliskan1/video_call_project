@@ -7,6 +7,7 @@ import FaceCamCard from "../components/FaceCamCard.jsx";
 export default function Room() {
   const [users, setUsers] = useState([]);
   const [remoteStreams, setRemoteStreams] = useState({});
+const [mySocketId, setMySocketId] = useState(null);
 
   const socketRef = useRef(null);
   const pcsRef = useRef({});
