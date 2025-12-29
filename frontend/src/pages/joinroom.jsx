@@ -1,7 +1,7 @@
 import FaceCamCard from "../components/FaceCamCard.jsx";
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
-import "./Joinroom.css";
+import "../Joinroom.css";
 function Joinroom() {
     const navigate = useNavigate();
 const [previewStream, setPreviewStream] = useState(null);
