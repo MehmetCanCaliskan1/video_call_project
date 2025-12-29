@@ -65,3 +65,36 @@
   transform: translateY(-2px) scale(1.1);
   box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);
 }
+@media (max-width: 768px) {
+  .container {
+    position: relative; /* fixed yerine */
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: 1.5px;
+    text-align: center;
+  }
+
+  .buttonContainer {
+    width: 100%;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+    border-radius: 20px;
+  }
+
+  .primaryBtn,
+  .secondaryBtn {
+    width: 100%;
+    font-size: 1rem;
+    padding: 1rem;
+  }
+
+  /* Mobilde hover scale'e gerek yok */
+  .primaryBtn:hover,
+  .secondaryBtn:hover {
+    transform: none;
+  }
+}
