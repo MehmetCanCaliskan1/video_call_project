@@ -58,3 +58,12 @@
   font-size: 16px;
   transition: background 0.2s;
 }
+@media (max-width: 768px) {
+  .joinroom-wrapper {
+    flex-direction: column;
+  }
+  .joinroom-form {
+    min-width: 100%;
+    height: auto;
+  }
+}
