@@ -2,6 +2,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import FaceCamCard from "../components/FaceCamCard.jsx";
+ import "../room.css";
 
 export default function Room() {
   const [users, setUsers] = useState([]);
@@ -157,52 +158,55 @@ socketRef.current.on("room-users", async (roomUsers) => {
   }, [roomId, username]);
 
   return (
-    <div>
-      <h2>
-        TOPLANTI KODU<br /><br />
-        {roomId}
-        <button
-             style={{ marginLeft: 10 }}
-          onClick={() => navigator.clipboard.writeText(roomId)}
-        >
-          Kopyala
-        </button>
-      </h2>
 
-      <h2>Odadaki Kişiler</h2>
-      <ul style={{ textTransform: "capitalize" }}>
-        <li>{username} (Siz)</li>
-        {users.map(u => (
-          <li >{u.username}</li>
-        ))}
-      </ul>
+<div className="meeting-container">
+  <h2 className="meeting-code">
+    TOPLANTI KODU<br /><br />
+    {roomId}
+    <button
+      className="copy-button"
+      onClick={() => navigator.clipboard.writeText(roomId)}
+    >
+      Kopyala
+    </button>
+  </h2>
 
-      <h1 style={{ textAlign: "center" }}>TOPLANTI SALONU</h1>
+  <h2>Odadaki Kişiler</h2>
+  <ul className="user-list">
+    <li>{username} (Siz)</li>
+    {users.map(u => (
+      <li key={u.socketId}>{u.username}</li>
+    ))}
+  </ul>
 
-      <div style={{ display: "flex", justifyContent: "center", gap: 30 }}>
-        <FaceCamCard
-          title={username}
-          isLocal
-          videoStream={localStreamRef.current}
-        />
-        {users.map(u => (
-          <FaceCamCard
-            key={u.socketId}
-            title={u.username}
-            isLocal={false}
-            videoStream={remoteStreams[u.socketId]}
-          />
-        ))}
-      </div>
+  <h1 className="meeting-title">TOPLANTI SALONU</h1>
 
-      <div style={{ textAlign: "center", marginTop: 40 }}>
-        <button
-          onClick={() => (window.location.href = "/")}
-          style={{ background: "red", 
-            color: "white", padding: "10px 20px" }}
-        >TOPLANTIDAN AYRIL
-        </button>
-      </div>
-    </div>
+  <div className="video-container">
+    <FaceCamCard
+      title={username}
+      isLocal
+      videoStream={localStreamRef.current}
+    />
+
+    {users.map(u => (
+      <FaceCamCard
+        key={u.socketId}
+        title={u.username}
+        isLocal={false}
+        videoStream={remoteStreams[u.socketId]}
+      />
+    ))}
+  </div>
+
+  <div className="leave-container">
+    <button
+      className="leave-button"
+      onClick={() => (window.location.href = "/")}
+    >
+      TOPLANTIDAN AYRIL
+    </button>
+  </div>
+</div>
+
   );
 }
