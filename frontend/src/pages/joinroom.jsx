@@ -4,13 +4,15 @@ import { useRef, useEffect, useState } from "react";
 
 function Joinroom() {
     const navigate = useNavigate();
-const [previewStream, setPreviewStream] = useState(null);
+    const [previewStream, setPreviewStream] = useState(null);
+    const localStreamRef = useRef(null);
 
-    const redirectToRoom = async(e) => {
+    const redirectToRoom = async (e) => {
         e.preventDefault();
-       
+
         const roomID = e.target.roomID.value;
         const username = e.target.username.value;
+
         if (!roomID) {
             alert("Lütfen toplantı kodunu giriniz.");
             return;
@@ -19,61 +21,71 @@ const [previewStream, setPreviewStream] = useState(null);
             alert("Lütfen kullanıcı adını giriniz.");
             return;
         }
-if (username.includes(" ")) {
+        if (username.includes(" ")) {
             alert("Kullanıcı adı boşluk içeremez.");
             return;
         }
-if (!username||!roomID) {
-            alert("Lütfen tüm alanları doldurunuz.");
-            return;
-        }
-if (roomID.length !== 36) {
+        if (roomID.length !== 36) {
             alert("Hatalı toplantı kodu.");
             return;
         }
-        navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
 
-  };
-useEffect(() => {
-  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-    .then(stream => {
-      localStreamRef.current = stream;
-      setPreviewStream(stream);
-    });
-}, []);
-    const localStreamRef = useRef(null);
+        navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
+    };
+
+    useEffect(() => {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then((stream) => {
+            localStreamRef.current = stream;
+            setPreviewStream(stream);
+        });
+    }, []);
 
     return (
-        <div style={{ minHeight: "100vh", background: "#f7f8fa" }}>
-            <h1 style={{ textAlign: "center", color: "#333" }}>
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "#f7f8fa",
+                padding: "16px",
+                display: "flex",
+                flexDirection: "column",
+            }}
+        >
+            <h1
+                style={{
+                    textAlign: "center",
+                    color: "#333",
+                    fontSize: "1.8rem",
+                    marginBottom: "24px",
+                }}
+            >
                 Toplantıya Katılın
             </h1>
+
             <div
                 style={{
                     display: "flex",
-                    flexDirection: "row",
+                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    minHeight: "80vh",
-                    gap: "32px",
+                    gap: "24px",
+                    flex: 1,
                 }}
             >
                 <form
                     onSubmit={redirectToRoom}
                     style={{
-
                         background: "#fff",
-                        padding: "60px 40px",
-                        borderRadius: "12px",
-                        boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
+                        padding: "32px 24px",
+                        borderRadius: "14px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
                         display: "flex",
                         flexDirection: "column",
-                        gap: "18px",
-                        minWidth: "350px",
-                        height: "250px",
+                        gap: "16px",
+                        width: "100%",
+                        maxWidth: "380px",
                     }}
                 >
-                    <label style={{ fontWeight: 500, color: "#444" }}>
+                    <label style={{ fontWeight: 500, color: "#444", fontSize: "14px" }}>
                         Toplantı Kodu:
                         <input
                             type="text"
@@ -81,16 +93,17 @@ useEffect(() => {
                             style={{
                                 marginTop: "6px",
                                 width: "100%",
-                                padding: "8px",
-                                borderRadius: "6px",
+                                padding: "10px",
+                                borderRadius: "8px",
                                 border: "1px solid #ccc",
-                                marginBottom: "10px",
+                                fontSize: "14px",
                             }}
                             autoComplete="off"
                             required
                         />
                     </label>
-                    <label style={{ fontWeight: 500, color: "#444" }}>
+
+                    <label style={{ fontWeight: 500, color: "#444", fontSize: "14px" }}>
                         Kullanıcı Adı:
                         <input
                             type="text"
@@ -98,37 +111,41 @@ useEffect(() => {
                             style={{
                                 marginTop: "6px",
                                 width: "100%",
-                                padding: "8px",
-                                borderRadius: "6px",
+                                padding: "10px",
+                                borderRadius: "8px",
                                 border: "1px solid #ccc",
+                                fontSize: "14px",
                             }}
                             autoComplete="off"
                             required
                         />
                     </label>
+
                     <button
+                        type="submit"
                         style={{
-                            marginTop: "12px",
-                            borderRadius: "6px",
-                            padding: "10px 0",
+                            marginTop: "8px",
+                            borderRadius: "10px",
+                            padding: "12px 0",
                             background: "#1976d2",
                             color: "#fff",
                             fontWeight: 600,
                             border: "none",
                             cursor: "pointer",
-                            fontSize: "16px",
-                            transition: "background 0.2s",
+                            fontSize: "15px",
                         }}
-                        type="submit"
                     >
                         Katıl
                     </button>
                 </form>
-                <FaceCamCard
-                    title="Kamera Önizleme"
-                    isLocal={true}
-                    stream={previewStream}
-                />
+
+                <div style={{ width: "100%", maxWidth: "380px" }}>
+                    <FaceCamCard
+                        title="Kamera Önizleme"
+                        isLocal={true}
+                        stream={previewStream}
+                    />
+                </div>
             </div>
         </div>
     );
