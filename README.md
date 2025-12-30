@@ -7,7 +7,8 @@ Gerçek zamanlı görüntülü görüşme sağlayan web uygulaması.
 - WebRTC kullanımı
 - Socket.io ile sinyalizasyon
 - Oda (room) bazlı görüşme
-- Sadece iki kişik odalar
+- Uuid ile unique oda key'leri
+- Sadece iki kişilik odalar
 
 ## 🛠️ Kullanılan Teknolojiler
 - Frontend: React / Vite / HTML-CSS-JS
