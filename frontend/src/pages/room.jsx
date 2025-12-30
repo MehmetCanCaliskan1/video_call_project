@@ -187,6 +187,8 @@ socketRef.current.on("room-users", async (roomUsers) => {
       title={username}
       isLocal
       videoStream={localStreamRef.current}
+      showVideoButton={true}
+
     />
 
     {users.map(u => (
@@ -195,6 +197,8 @@ socketRef.current.on("room-users", async (roomUsers) => {
         title={u.username}
         isLocal={false}
         videoStream={remoteStreams[u.socketId]}
+        showVideoButton={true}
+
       />
     ))}
   </div>

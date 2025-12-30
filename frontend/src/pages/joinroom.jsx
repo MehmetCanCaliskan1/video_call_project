@@ -81,6 +81,7 @@ useEffect(() => {
       title="Kamera Önizleme"
       isLocal={true}
       stream={previewStream}
+      showVideoButton={false}
     />
   </div>
 </div>
