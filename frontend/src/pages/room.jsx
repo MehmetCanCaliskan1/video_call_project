@@ -24,9 +24,40 @@ const [mySocketId, setMySocketId] = useState(null);
       return pcsRef.current[otherUserId];
     }
 
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
-    });
+   const pc = new RTCPeerConnection({
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" }, // STUN
+   /*  {
+      urls: "turn:YOUR_TURN_SERVER_IP:3478",  // TURN
+      username: "07af05e7c57849a01ae77b0c",
+      credential: "GY2GcKhMltO2CdJk"
+    }, */
+      {
+        urls: "stun:stun.relay.metered.ca:80",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80",
+        username: "07af05e7c57849a01ae77b0c",
+        credential: "GY2GcKhMltO2CdJk",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:80?transport=tcp",
+        username: "07af05e7c57849a01ae77b0c",
+        credential: "GY2GcKhMltO2CdJk",
+      },
+      {
+        urls: "turn:global.relay.metered.ca:443",
+        username: "07af05e7c57849a01ae77b0c",
+        credential: "GY2GcKhMltO2CdJk",
+      },
+      {
+        urls: "turns:global.relay.metered.ca:443?transport=tcp",
+        username: "07af05e7c57849a01ae77b0c",
+        credential: "GY2GcKhMltO2CdJk",
+      },
+  ],
+  
+});
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach(track =>
