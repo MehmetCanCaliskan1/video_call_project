@@ -2,45 +2,38 @@ import FaceCamCard from "../components/FaceCamCard.jsx";
 import { useNavigate } from "react-router-dom";
 import { useRef, useEffect, useState } from "react";
 import "../Joinroom.css";
-import socket from "../socket";
-
 function Joinroom() {
     const navigate = useNavigate();
 const [previewStream, setPreviewStream] = useState(null);
 
-const redirectToRoom = (e) => {
-  e.preventDefault();
+    const redirectToRoom = async(e) => {
+        e.preventDefault();
+       
+        const roomID = e.target.roomID.value;
+        const username = e.target.username.value;
+        if (!roomID) {
+            alert("Lütfen toplantı kodunu giriniz.");
+            return;
+        }
+        if (!username) {
+            alert("Lütfen kullanıcı adını giriniz.");
+            return;
+        }
+if (username.includes(" ")) {
+            alert("Kullanıcı adı boşluk içeremez.");
+            return;
+        }
+if (!username||!roomID) {
+            alert("Lütfen tüm alanları doldurunuz.");
+            return;
+        }
+if (roomID.length !== 36) {
+            alert("Hatalı toplantı kodu.");
+            return;
+        }
+        navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
 
-  const roomID = e.target.roomID.value;
-  const username = e.target.username.value;
-
-  if (!roomID || !username) {
-    alert("Lütfen tüm alanları doldurunuz.");
-    return;
-  }
-
-  if (username.includes(" ")) {
-    alert("Kullanıcı adı boşluk içeremez.");
-    return;
-  }
-
-  if (roomID.length !== 36) {
-    alert("Hatalı toplantı kodu.");
-    return;
-  }
-
-  //ODA DOLU mu
-  socket.emit("check-room", roomID, (res) => {
-    if (res.full) {
-      alert("Oda dolu, katılamazsınız.");
-      console.log("ODA DOLU");
-      return;
-    }
-
-    navigate(`/room/${roomID}?username=${encodeURIComponent(username)}`);
-  });
-};
-
+  };
 useEffect(() => {
   navigator.mediaDevices.getUserMedia({ video: true, audio: false })
     .then(stream => {

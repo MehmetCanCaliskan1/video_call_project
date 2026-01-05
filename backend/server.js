@@ -69,7 +69,7 @@ io.on("connection", (socket) => {
     //console.log(`${username} odayı terk etti: ${roomId}`);
 
   });
-socket.on("check-room", (roomId, callback) => {
+/* socket.on("check-room", (roomId, callback) => {
   const count = rooms[roomId]?.length || 0;
 
   if (count >= 2) {
@@ -77,7 +77,7 @@ socket.on("check-room", (roomId, callback) => {
   } else {
     callback({ full: false });
   }
-});
+}); */
 
 //webrtc signaling
 
