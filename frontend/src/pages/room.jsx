@@ -24,7 +24,7 @@ const [mySocketId, setMySocketId] = useState(null);
       return pcsRef.current[otherUserId];
     }
 
-   const pc = new RTCPeerConnection({
+   const pc = new RTCPeerConnection( {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" }, // STUN
    /*  {
