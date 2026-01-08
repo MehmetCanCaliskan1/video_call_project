@@ -149,7 +149,7 @@ export default function Room() {
 
       const other = others[0];
 
-      // WebRTC Offer Mantığı (Senin kodundaki logic)
+      // WebRTC Offer Mantığı 
       if (socketRef.current.id < other.socketId) return;
       if (pcsRef.current[other.socketId]) return;
 
@@ -235,6 +235,12 @@ export default function Room() {
           display: 'flex', flexDirection: 'column', alignItems: 'center', 
           justifyContent: 'center', height: '100vh', color: 'white', backgroundColor: '#222' 
       }}>
+           <FaceCamCard
+          title={username}
+          isLocal={true}
+          videoStream={localStreamRef.current}
+          showVideoButton={true}
+        />
         <h2>{statusMessage}</h2>
         <div className="loader" style={{ marginTop: '20px', border: '4px solid #f3f3f3', borderTop: '4px solid #3498db', borderRadius: '50%', width: '30px', height: '30px', animation: 'spin 2s linear infinite' }}></div>
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
@@ -256,26 +262,27 @@ export default function Room() {
       {/* HOST İÇİN ONAY KUTUSU (POPUP) */}
       {isHost && incomingRequests.length > 0 && (
         <div className="request-modal" style={{
-            position: 'fixed', top: '20px', right: '20px', 
-            background: '#2a2a2a', padding: '15px', borderRadius: '8px',
+            position: 'fixed', bottom: '20px', right: '20px', 
+            background: '#2a2a2a', padding: '30px', borderRadius: '8px',
             boxShadow: '0 4px 15px rgba(0,0,0,0.5)', zIndex: 9999, border: '1px solid #444', color: 'white'
         }}>
           <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>Katılım İstekleri</h3>
           {incomingRequests.map((req) => (
             <div key={req.socketId} style={{ marginBottom: '10px', paddingBottom: '10px', borderBottom: '1px solid #444', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <span style={{ fontSize: '14px' }}><strong>{req.username}</strong> girmek istiyor.</span>
+              <span style={{ fontSize: '14px' }}><strong>{req.username}</strong> odaya girmek istiyor.</span>
               <div style={{ display: 'flex', gap: '10px' }}>
+                
                 <button 
                   onClick={() => handleDecision(req.socketId, req.username, 'approve')}
                   style={{ flex: 1, background: '#4CAF50', color: 'white', border: 'none', padding: '5px', cursor: 'pointer', borderRadius: '4px' }}
                 >
-                  Kabul
+                  Kabul Et
                 </button>
                 <button 
                   onClick={() => handleDecision(req.socketId, req.username, 'reject')}
                   style={{ flex: 1, background: '#f44336', color: 'white', border: 'none', padding: '5px', cursor: 'pointer', borderRadius: '4px' }}
                 >
-                  Red
+                  Reddet
                 </button>
               </div>
             </div>
